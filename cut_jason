@@ -3,6 +3,7 @@ my_path=`pwd`
 cp $my_path/$1 $my_path/workfile
 awk '{{printf"%s",$0}}' "$my_path/workfile" > $my_path/stage_file
 rm -rf "$my_path/workfile"
+rm -rf $my_path/final_template
 #sed -i 'H;${g;s/\n//g;p;}' "$my_path/$1"
 
 sed -i 's/\"created\"/\n\"created\"/g' "$my_path/stage_file"
@@ -40,19 +41,28 @@ sed -i 's/$/ link]/g' "$my_path/link_file"
 
 paste -d " " $my_path/date_paste $my_path/tittle_file $my_path/author_file $my_path/link_file > $my_path/tmp_file
 sed -i '/Merge\|merge/d' $my_path/tmp_file
-sed -i '/.*/i|-' $my_path/tmp_file
-
-cat <<EOF > $my_path/final_template
-{| class="wikitable" 
-|-style="height:70px"
-! Date !! Tittle !! Author !! style="width:300px" | comment !! style="width:400px" | Story !! style="width:80px" | Gerrit Link
-EOF
-cat $my_path/tmp_file >> $my_path/final_template
-echo "|}" >> $my_path/final_template
+month="01 02 03 04 05 06 07 08 09 10 11 12"
+year="4 5 6 7 8 9"
+for j in $year
+do
+    for k in $month;do
+        date="201$j-$k-"
+        sed "/$date/!d" "$my_path/tmp_file" > "$my_path/tmp_file_$date"
+        if [ -s "$my_path/tmp_file_$date" ]
+        then
+            sed -i '/.*/i|-' $my_path/tmp_file_$date
+            cat $my_path/head.txt >> $my_path/final_template
+            cat "$my_path/tmp_file_$date" >> $my_path/final_template
+            echo "|}" >> $my_path/final_template
+            echo "==============================================================================" >> $my_path/final_template
+        fi
+    done
+done
+#cat $my_path/tmp_file >> $my_path/final_template
 #rm -rf $my_path/stage_file
 rm -rf $my_path/date_file
 rm -rf $my_path/date_paste
 rm -rf $my_path/tittle_file
 rm -rf $my_path/author_file
 rm -rf $my_path/link_file
-rm -rf $my_path/tmp_file
+rm -rf $my_path/tmp_file*
