@@ -1,0 +1,1 @@
+Use firefox debug version to open gerrit, "ctrl + shift + s" open debug. reload page, see "Network->Response" copy the 2nd line of the last json file.

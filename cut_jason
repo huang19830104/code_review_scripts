@@ -1,0 +1,58 @@
+#!/bin/sh
+my_path=`pwd`
+cp $my_path/$1 $my_path/workfile
+awk '{{printf"%s",$0}}' "$my_path/workfile" > $my_path/stage_file
+rm -rf "$my_path/workfile"
+#sed -i 'H;${g;s/\n//g;p;}' "$my_path/$1"
+
+sed -i 's/\"created\"/\n\"created\"/g' "$my_path/stage_file"
+sed -i 's/\"updated\"/\n\"updated\"/g' "$my_path/stage_file"
+sed -i 's/\"subject\"/\n\"subject\"/g' "$my_path/stage_file"
+sed -i 's/\"status\"/\n\"status\"/g' "$my_path/stage_file"
+sed -i 's/\"_number\"/\n\"_number\"/g' "$my_path/stage_file"
+sed -i 's/\"owner\"/\n\"owner\"/g' "$my_path/stage_file"
+sed -i 's/\"labels\"/\n\"labels\"/g' "$my_path/stage_file"
+sed -i '/^\"created\"\|^\"subject\"\|^\"_number\"\|^\"owner\"/!d' "$my_path/stage_file"
+sed -i 's/\"username\"/\n\"username\"/g' "$my_path/stage_file"
+sed -i '/\"created\"\|\"subject\"\|\"_number\"\|\"username\"/!d' "$my_path/stage_file"
+sed -i 's/,.*//g' "$my_path/stage_file"
+sed -i '/}}\|}}}}/d' "$my_path/stage_file"
+sed -i 's/}$//g' "$my_path/stage_file"
+#sed -i 's/\"username\":\"/username:/g' "$my_path/stage_file"
+#sed -i 's/\"created\":\"/date:/g' "$my_path/stage_file"
+#sed -i 's/\"subject\":\"/tittle:/g' "$my_path/stage_file"
+sed -i 's/\"_number\":/\"link\":https:\/\/gerrit.ericsson.se\//g' "$my_path/stage_file"
+sed -i 's/"$//g' "$my_path/stage_file"
+
+sed '/\"created\"/!d' "$my_path/stage_file" > "$my_path/date_file"
+sed -i 's/\"created\":\"/| /g' "$my_path/date_file"
+awk '{$3="";print $0}' $my_path/date_file > $my_path/date_paste
+
+sed '/\"subject\"/!d' "$my_path/stage_file" > "$my_path/tittle_file"
+sed -i 's/\"subject\":\"/|| /g' "$my_path/tittle_file"
+
+sed '/\"username\"/!d' "$my_path/stage_file" > "$my_path/author_file"
+sed -i 's/\"username\":\"/|| /g' "$my_path/author_file"
+
+sed '/\"link\"/!d' "$my_path/stage_file" > "$my_path/link_file"
+sed -i 's/\"link\":/||  ||  || [/g' "$my_path/link_file"
+sed -i 's/$/ link]/g' "$my_path/link_file"
+
+paste -d " " $my_path/date_paste $my_path/tittle_file $my_path/author_file $my_path/link_file > $my_path/tmp_file
+sed -i '/Merge\|merge/d' $my_path/tmp_file
+sed -i '/.*/i|-' $my_path/tmp_file
+
+cat <<EOF > $my_path/final_template
+{| class="wikitable" 
+|-style="height:70px"
+! Date !! Tittle !! Author !! style="width:300px" | comment !! style="width:400px" | Story !! style="width:80px" | Gerrit Link
+EOF
+cat $my_path/tmp_file >> $my_path/final_template
+echo "|}" >> $my_path/final_template
+#rm -rf $my_path/stage_file
+rm -rf $my_path/date_file
+rm -rf $my_path/date_paste
+rm -rf $my_path/tittle_file
+rm -rf $my_path/author_file
+rm -rf $my_path/link_file
+rm -rf $my_path/tmp_file
